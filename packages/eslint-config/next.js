@@ -44,6 +44,17 @@ export const nextJsConfig = [
       ...pluginReactHooks.configs.recommended.rules,
       // React scope no longer necessary with new JSX transform.
       "react/react-in-jsx-scope": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        {
+          "ts-ignore": false, // disables the error for ts-ignore comments
+          "ts-nocheck": true,
+          "ts-check": true,
+          "ts-expect-error": true,
+        },
+      ],
     },
   },
 ];

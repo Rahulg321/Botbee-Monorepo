@@ -1,14 +1,16 @@
 import React from "react";
 import { db } from "@repo/db";
 import { user } from "@repo/db/schema";
+import { auth } from "@/auth";
 
 const page = async () => {
-  const result = await db.select().from(user);
+  const userSession = await auth();
+  console.log(userSession);
+
   return (
     <div>
-      {result.map((user) => (
-        <div key={user.id}>{user.name}</div>
-      ))}
+      <h1>Hello</h1>
+      {JSON.stringify(userSession)}
     </div>
   );
 };
