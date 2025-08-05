@@ -1,0 +1,1 @@
+ALTER TABLE "bot_templates" DROP COLUMN IF EXISTS "avatar";

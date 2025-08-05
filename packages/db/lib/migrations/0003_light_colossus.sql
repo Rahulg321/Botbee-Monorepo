@@ -1,0 +1,1 @@
+ALTER TABLE "bot" ADD COLUMN "tone" text NOT NULL DEFAULT 'professional';
