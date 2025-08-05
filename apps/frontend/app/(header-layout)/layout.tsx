@@ -4,14 +4,6 @@ import { Plus_Jakarta_Sans, Lora, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -37,16 +29,11 @@ const ibmPlexMono = IBM_Plex_Mono({
   weight: ["400", "700"],
 });
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -58,15 +45,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>
-            <SidebarProvider>
-              <DashboardSidebar user={session.user} />
-              <SidebarInset>
-                <SidebarTrigger className="-ml-1" />
-                {children}
-              </SidebarInset>
-            </SidebarProvider>
-          </SessionProvider>
+          <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>
         <Toaster />
       </body>
