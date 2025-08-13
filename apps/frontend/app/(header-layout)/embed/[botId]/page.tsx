@@ -1,51 +1,29 @@
-"use client";
+import React from "react";
+import BotChat from "./bot-chat";
+import { auth } from "@/auth";
+import { notFound, redirect } from "next/navigation";
+import { createChat } from "@/lib/chat-store";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { useState } from "react";
+export const metadata = {
+  title: "Bot Chat",
+  description: "Bot Chat",
+};
 
-export default function Page() {
-  const { messages, sendMessage, status } = useChat({
-    experimental_throttle: 50,
+const page = async ({ params }: { params: Promise<{ botId: string }> }) => {
+  const session = await auth();
 
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-    }),
+  if (!session) {
+    return notFound();
+  }
+
+  const botId = (await params).botId;
+
+  const id = await createChat({
+    userId: session.user.id,
+    botId: botId,
   });
-  const [input, setInput] = useState("");
 
-  return (
-    <div className="block-space big-container">
-      {messages.map((message) => (
-        <div key={message.id}>
-          {message.role === "user" ? "User: " : "AI: "}
-          {message.parts.map((part, index) =>
-            part.type === "text" ? <span key={index}>{part.text}</span> : null
-          )}
-        </div>
-      ))}
+  redirect(`/embed/${botId}/${id}`);
+};
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (input.trim()) {
-            sendMessage({ text: input });
-            setInput("");
-          }
-        }}
-      >
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          disabled={status !== "ready"}
-          placeholder="Say something..."
-        />
-        <Button type="submit" disabled={status !== "ready"}>
-          Submit
-        </Button>
-      </form>
-    </div>
-  );
-}
+export default page;

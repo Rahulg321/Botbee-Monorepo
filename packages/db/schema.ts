@@ -594,15 +594,6 @@ export const verificationToken = pgTable(
 
 export type VerificationToken = InferSelectModel<typeof verificationToken>;
 
-export const travel = pgTable("travel", {
-  id: uuid("id").primaryKey().notNull().defaultRandom(),
-  name: text("name").notNull(),
-  userId: uuid("userId")
-    .references(() => user.id)
-    .notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
 export const language = pgEnum("language", ["en-gb", "en-us"]);
 
 export const bot = pgTable("bot", {
@@ -718,3 +709,43 @@ export const botResourceEmbeddings = pgTable(
 );
 
 export type BotEmbedding = InferSelectModel<typeof botResourceEmbeddings>;
+
+export const botChats = pgTable("bot_chats", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  botId: uuid("bot_id")
+    .notNull()
+    .references(() => bot.id, { onDelete: "cascade" }),
+  userId: uuid("userId")
+    .references(() => user.id)
+    .notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type BotChat = InferSelectModel<typeof botChats>;
+
+export const botChatMessages = pgTable("bot_chat_messages", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  messageId: text("message_id").notNull(),
+  botChatId: uuid("bot_chat_id")
+    .notNull()
+    .references(() => botChats.id, { onDelete: "cascade" }),
+  role: text("role", { enum: ["user", "system", "assistant"] }).notNull(),
+  content: text("content").notNull(),
+  parts: json("parts").notNull(),
+  metadata: json("metadata"),
+
+  // Timestamp for when the message was created.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type BotChatMessage = InferSelectModel<typeof botChatMessages>;
+
+export const botChatStream = pgTable("bot_chat_stream", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  botChatId: uuid("bot_chat_id")
+    .notNull()
+    .references(() => botChats.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type BotChatStream = InferSelectModel<typeof botChatStream>;
