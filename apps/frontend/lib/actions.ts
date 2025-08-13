@@ -13,12 +13,54 @@ import {
   generateVerificationToken,
 } from "@/lib/tokens";
 import { sendPasswordResetEmail, sendVerificationTokenEmail } from "@/lib/mail";
-import { AuthError } from "next-auth";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
-import { createUser, getPasswordResetTokenByToken, getUser } from "./queries";
+import {
+  createUser,
+  getPasswordResetTokenByToken,
+  getUser,
+  getBotMessageById,
+  deleteBotMessagesByChatIdAfterTimestamp,
+} from "./queries";
 import { signIn } from "@/auth";
 import { db } from "@repo/db";
 import { passwordResetToken, user } from "@repo/db/schema";
+import { ChatSDKError } from "./errors";
+import { generateText, UIMessage } from "ai";
+import { googleAISDKProvider } from "./ai/providers";
+
+export async function generateTitleFromUserMessage({
+  message,
+}: {
+  message: UIMessage;
+}) {
+  const { text: title } = await generateText({
+    model: googleAISDKProvider("gemini-2.5-flash"),
+    system: `\n
+    - you will generate a short title based on the first message a user begins a conversation with
+    - ensure it is not more than 80 characters long
+    - the title should be a summary of the user's message
+    - do not use quotes or colons`,
+    prompt: JSON.stringify(message),
+  });
+
+  return title;
+}
+
+export async function deleteTrailingMessages({ id }: { id: string }) {
+  const [message] = await getBotMessageById({ id });
+
+  if (!message) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Bot Message Instance not found"
+    );
+  }
+
+  await deleteBotMessagesByChatIdAfterTimestamp({
+    chatId: message.botChatId,
+    timestamp: message.createdAt,
+  });
+}
 
 const authFormSchema = z.object({
   email: z.string().email(),
@@ -68,15 +110,7 @@ export const login = async (
       redirectTo: `${DEFAULT_LOGIN_REDIRECT}?login=success`,
     });
   } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return { status: "failed" };
-        default:
-          throw error;
-      }
-    }
-    throw error;
+    throw new ChatSDKError("bad_request:auth", "Invalid credentials");
   }
 
   // This part is unreachable because signIn with redirect throws an error.

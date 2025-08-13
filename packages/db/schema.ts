@@ -712,6 +712,7 @@ export type BotEmbedding = InferSelectModel<typeof botResourceEmbeddings>;
 
 export const botChats = pgTable("bot_chats", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
+  title: text("title"),
   botId: uuid("bot_id")
     .notNull()
     .references(() => bot.id, { onDelete: "cascade" }),

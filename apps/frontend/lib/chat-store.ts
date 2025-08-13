@@ -48,8 +48,6 @@ export async function createChat({
  * @returns The chat messages
  */
 export async function loadChat(id: string): Promise<UIMessage[]> {
-  console.log("inside load chat ", id);
-
   if (!id) {
     console.log("did not provide chatid to load messages");
     return [];
@@ -64,7 +62,7 @@ export async function loadChat(id: string): Promise<UIMessage[]> {
       .where(eq(botChatMessages.botChatId, id))
       .orderBy(asc(botChatMessages.createdAt));
 
-    console.log("dbMessages", dbMessages);
+    // console.log("dbMessages", dbMessages);
   } catch (error) {
     console.error("error loading chat", error);
     return [];
@@ -89,6 +87,31 @@ export async function loadChat(id: string): Promise<UIMessage[]> {
 }
 
 /**
+ * Saves a chat title to the database
+ * @param chatId - The ID of the chat
+ * @param title - The title of the chat
+ */
+export const saveChatTitle = async ({
+  chatId,
+  title,
+}: {
+  chatId: string;
+  title: string;
+}): Promise<void> => {
+  try {
+    await db
+      .update(botChats)
+      .set({
+        title,
+      })
+      .where(eq(botChats.id, chatId));
+  } catch (error) {
+    console.error("error saving chat title", error);
+    throw error;
+  }
+};
+
+/**
  * Saves a chat to the database
  * @param chatId - The ID of the chat
  * @param messages - The messages to save
@@ -102,14 +125,14 @@ export async function saveChat({
 }): Promise<void> {
   try {
     // console.log("inside save chat with chatId", chatId);
-    console.log("inside save chat with messages", messages);
+    // console.log("inside save chat with messages", messages);
 
-    messages.map((e, index) => {
-      console.log(`message ${index} parts`, e.parts);
-      console.log(`message ${index} role`, e.role);
-      console.log(`message ${index} id`, e.id);
-      console.log(`message ${index} metadata`, e.metadata);
-    });
+    // messages.map((e, index) => {
+    //   console.log(`message ${index} parts`, e.parts);
+    //   console.log(`message ${index} role`, e.role);
+    //   console.log(`message ${index} id`, e.id);
+    //   console.log(`message ${index} metadata`, e.metadata);
+    // });
 
     // Map UIMessages to the format expected by our 'messages' table schema
     const newMessages = messages.map((message) => ({

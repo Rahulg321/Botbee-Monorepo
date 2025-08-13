@@ -1,0 +1,1 @@
+ALTER TABLE "bot_chats" ADD COLUMN "title" text DEFAULT 'New Chat' NOT NULL;

@@ -4,6 +4,8 @@ import { Plus_Jakarta_Sans, Lora, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import BotSidebar from "@/components/bot-sidebar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -45,7 +47,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            <SidebarProvider>
+              <BotSidebar />
+              <SidebarTrigger />
+              <main className="flex-1 p-4">{children}</main>
+            </SidebarProvider>
+          </SessionProvider>
         </ThemeProvider>
         <Toaster />
       </body>

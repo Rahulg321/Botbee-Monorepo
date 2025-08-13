@@ -33,10 +33,13 @@ import {
   bot,
   botResources,
   botTemplates,
+  botChats,
+  botChatMessages,
 } from "@repo/db/schema";
 import { BotDocument, BotWithDocumentsCount } from "@repo/shared/types";
 import { db } from "@repo/db";
 import { generateHashedPassword } from "./utils";
+import { ChatSDKError } from "./errors";
 
 /**
  * Get filtered bot documents by user id with pagination
@@ -94,6 +97,78 @@ export async function getBotDocumentsByUserId(
       error
     );
     return { documents: [], totalPages: 0, totalDocuments: 0 };
+  }
+}
+
+/**
+ * Get a bot chat by id
+ * @param id - The id of the chat
+ * @returns The chat
+ */
+export async function getBotChatById({ id }: { id: string }) {
+  try {
+    const [selectedChat] = await db
+      .select()
+      .from(botChats)
+      .where(eq(botChats.id, id));
+    return selectedChat;
+  } catch (error) {
+    console.log("error loading bot chat", error);
+
+    return null;
+  }
+}
+
+export async function getBotMessageById({ id }: { id: string }) {
+  try {
+    return await db
+      .select()
+      .from(botChatMessages)
+      .where(eq(botChatMessages.id, id));
+  } catch (error) {
+    console.log("An error occured trying to get message by id", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get message by id"
+    );
+  }
+}
+
+export async function deleteBotMessagesByChatIdAfterTimestamp({
+  chatId,
+  timestamp,
+}: {
+  chatId: string;
+  timestamp: Date;
+}) {
+  try {
+    const messagesToDelete = await db
+      .select({ id: botChatMessages.id })
+      .from(botChatMessages)
+      .where(
+        and(
+          eq(botChatMessages.botChatId, chatId),
+          gte(botChatMessages.createdAt, timestamp)
+        )
+      );
+
+    const messageIds = messagesToDelete.map((message) => message.id);
+
+    if (messageIds.length > 0) {
+      return await db
+        .delete(botChatMessages)
+        .where(
+          and(
+            eq(botChatMessages.botChatId, chatId),
+            inArray(botChatMessages.id, messageIds)
+          )
+        );
+    }
+  } catch (error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to delete messages by chat id after timestamp"
+    );
   }
 }
 

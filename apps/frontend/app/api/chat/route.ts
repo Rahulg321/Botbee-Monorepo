@@ -1,7 +1,14 @@
+import { auth } from "@/auth";
+import { generateTitleFromUserMessage } from "@/lib/actions";
 import { googleAISDKProvider } from "@/lib/ai/providers";
 import { askForConfirmation } from "@/lib/ai/tools/ask-confirmation-tool";
 import { weatherTool } from "@/lib/ai/tools/weather-tool";
-import { loadChat, saveChat } from "@/lib/chat-store";
+import { loadChat, saveChat, saveChatTitle } from "@/lib/chat-store";
+import { ChatSDKError } from "@/lib/errors";
+import { getBotChatById } from "@/lib/queries";
+import { db } from "@repo/db";
+import { botChats } from "@repo/db/schema";
+import { eq } from "drizzle-orm";
 import {
   convertToModelMessages,
   createIdGenerator,
@@ -13,16 +20,61 @@ import {
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+  const userSession = await auth();
+
+  if (!userSession) {
+    return new ChatSDKError("bad_request:auth", "Unauthorized").toResponse();
+  }
+
   const body = await req.json();
 
   console.log("body inside chat request", body);
 
-  const { id, message, model, webSearch } = body;
+  const { id, message, model, webSearch, botId, chatId } = body;
 
-  //@ts-ignore
-  message.parts.map((e, index) => {
-    console.log(`message ${index}`, e);
-  });
+  if (!botId) {
+    return new ChatSDKError(
+      "bad_request:api",
+      "Bot ID is required"
+    ).toResponse();
+  }
+
+  if (!chatId) {
+    return new ChatSDKError(
+      "bad_request:api",
+      "Chat ID is required"
+    ).toResponse();
+  }
+
+  const chat = await getBotChatById({ id });
+
+  if (!chat) {
+    console.log(
+      "chat does not exist, this should not happen since chat is created in page component"
+    );
+    return new ChatSDKError("bad_request:api", "Chat not found").toResponse();
+  }
+
+  // Check if the user owns this chat
+  if (chat.userId !== userSession.user.id) {
+    console.log("user id does not match with the chat");
+    return new ChatSDKError("forbidden:chat").toResponse();
+  }
+
+  // Update chat title if it doesn't have one
+  if (!chat.title) {
+    console.log("generating title for existing chat");
+    const title = await generateTitleFromUserMessage({
+      message,
+    });
+
+    console.log("title generated", title);
+
+    await saveChatTitle({
+      chatId: id,
+      title,
+    });
+  }
 
   // const {
   //   chatId,
@@ -35,8 +87,6 @@ export async function POST(req: Request) {
   //   model: string;
   //   webSearch: boolean;
   // } = await req.json();
-
-  console.log("chatId inside route", id);
 
   // load the previous messages from the server:
   const previousMessages = await loadChat(id);
@@ -55,6 +105,8 @@ export async function POST(req: Request) {
     },
     stopWhen: stepCountIs(5),
   });
+
+  result.consumeStream();
 
   return result.toUIMessageStreamResponse({
     originalMessages: messages,

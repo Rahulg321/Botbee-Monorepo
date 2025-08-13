@@ -45,6 +45,7 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool";
+import { toast } from "sonner";
 
 type WeatherToolInput = {
   location: string;
@@ -98,12 +99,22 @@ export default function BotChat({
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      prepareSendMessagesRequest({ messages, id }) {
-        return { body: { message: messages[messages.length - 1], id } };
+      prepareSendMessagesRequest({ messages, id, body }) {
+        return {
+          body: {
+            message: messages[messages.length - 1],
+            id,
+            ...body, // Merge any custom body data
+          },
+        };
       },
     }),
+
     onError: (error) => {
       console.error("An error occurred:", error);
+      toast.error(`${error.name}:${error.cause ? error.cause : ""}`, {
+        description: error.message,
+      });
     },
     onData: (data) => {
       console.log("Received data part from server:", data);
@@ -117,8 +128,7 @@ export default function BotChat({
         { text: input },
         {
           body: {
-            model: model,
-            webSearch: webSearch,
+            customKey: "customValue",
             botId: botId,
             chatId: chatId,
           },
@@ -134,7 +144,7 @@ export default function BotChat({
   ) as WeatherToolUIPart | undefined;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
+    <div className="relative size-full h-screen">
       <div className="flex flex-col h-full">
         <Conversation className="h-full">
           <ConversationContent>
