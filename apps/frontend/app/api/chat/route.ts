@@ -5,10 +5,8 @@ import { askForConfirmation } from "@/lib/ai/tools/ask-confirmation-tool";
 import { weatherTool } from "@/lib/ai/tools/weather-tool";
 import { loadChat, saveChat, saveChatTitle } from "@/lib/chat-store";
 import { ChatSDKError } from "@/lib/errors";
-import { getBotChatById } from "@/lib/queries";
+import { deleteBotChatById, getBotChatById } from "@/lib/queries";
 import { db } from "@repo/db";
-import { botChats } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
 import {
   convertToModelMessages,
   createIdGenerator,
@@ -16,6 +14,7 @@ import {
   streamText,
   UIMessage,
 } from "ai";
+import { NextResponse } from "next/server";
 
 export const maxDuration = 30;
 
@@ -52,6 +51,7 @@ export async function POST(req: Request) {
     console.log(
       "chat does not exist, this should not happen since chat is created in page component"
     );
+
     return new ChatSDKError("bad_request:api", "Chat not found").toResponse();
   }
 
@@ -94,6 +94,7 @@ export async function POST(req: Request) {
   // console.log("loaded previous messages from loadChat", previousMessages);
 
   // append the new message to the previous messages:
+
   const messages = [...previousMessages, message];
 
   const result = streamText({
@@ -122,4 +123,38 @@ export async function POST(req: Request) {
     sendSources: true,
     sendReasoning: true,
   });
+}
+
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return new ChatSDKError(
+      "bad_request:api",
+      "Chat ID is required"
+    ).toResponse();
+  }
+
+  const userSession = await auth();
+
+  if (!userSession) {
+    return new ChatSDKError("bad_request:auth", "Unauthorized").toResponse();
+  }
+
+  const chat = await getBotChatById({ id });
+
+  if (!chat) {
+    return new ChatSDKError("bad_request:api", "Chat not found").toResponse();
+  }
+
+  if (chat.userId !== userSession.user.id) {
+    return new ChatSDKError("forbidden:chat").toResponse();
+  }
+
+  console.log("inside deleting bot chat");
+  const deletedChat = await deleteBotChatById({ id });
+
+  return Response.json(deletedChat, { status: 200 });
 }

@@ -35,6 +35,7 @@ import {
   botTemplates,
   botChats,
   botChatMessages,
+  type BotChat,
 } from "@repo/db/schema";
 import { BotDocument, BotWithDocumentsCount } from "@repo/shared/types";
 import { db } from "@repo/db";
@@ -97,6 +98,107 @@ export async function getBotDocumentsByUserId(
       error
     );
     return { documents: [], totalPages: 0, totalDocuments: 0 };
+  }
+}
+
+/**
+ * Delete a bot chat by id
+ * @param id - The id of the chat to delete
+ * @returns The deleted chat
+ */
+export async function deleteBotChatById({ id }: { id: string }) {
+  try {
+    const [chatsDeleted] = await db
+      .delete(botChats)
+      .where(eq(botChats.id, id))
+      .returning();
+    return chatsDeleted;
+  } catch (error) {
+    console.log(error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to delete chat by id"
+    );
+  }
+}
+
+export async function getBotChatsByUserId({
+  id,
+  limit,
+  startingAfter,
+  endingBefore,
+}: {
+  id: string;
+  limit: number;
+  startingAfter: string | null;
+  endingBefore: string | null;
+}) {
+  try {
+    const extendedLimit = limit + 1;
+
+    const query = (whereCondition?: SQL<any>) =>
+      db
+        .select()
+        .from(botChats)
+        .where(
+          whereCondition
+            ? and(whereCondition, eq(botChats.userId, id))
+            : eq(botChats.userId, id)
+        )
+        .orderBy(desc(botChats.createdAt))
+        .limit(extendedLimit);
+
+    let filteredChats: Array<BotChat> = [];
+
+    if (startingAfter) {
+      const [selectedChat] = await db
+        .select()
+        .from(botChats)
+        .where(eq(botChats.id, startingAfter))
+        .limit(1);
+
+      if (!selectedChat) {
+        throw new ChatSDKError(
+          "not_found:database",
+          `Chat with id ${startingAfter} not found`
+        );
+      }
+
+      filteredChats = await query(
+        gt(botChats.createdAt, selectedChat.createdAt)
+      );
+    } else if (endingBefore) {
+      const [selectedChat] = await db
+        .select()
+        .from(botChats)
+        .where(eq(botChats.id, endingBefore))
+        .limit(1);
+
+      if (!selectedChat) {
+        throw new ChatSDKError(
+          "not_found:database",
+          `Chat with id ${endingBefore} not found`
+        );
+      }
+
+      filteredChats = await query(
+        lt(botChats.createdAt, selectedChat.createdAt)
+      );
+    } else {
+      filteredChats = await query();
+    }
+
+    const hasMore = filteredChats.length > limit;
+
+    return {
+      chats: hasMore ? filteredChats.slice(0, limit) : filteredChats,
+      hasMore,
+    };
+  } catch (error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get chats by user id"
+    );
   }
 }
 

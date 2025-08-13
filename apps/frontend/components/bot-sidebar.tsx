@@ -25,15 +25,16 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Button } from "./ui/button";
+import SidebarHistory from "./sidebar-history";
+import { User } from "next-auth";
 
-export default function BotSidebar() {
+export default function BotSidebar({ user }: { user: User | undefined }) {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
 
   console.log(pathname);
-
-  const botId = pathname.split("/")[1];
+  const botId = pathname.split("/")[2];
 
   return (
     <Sidebar>
@@ -59,8 +60,15 @@ export default function BotSidebar() {
                   className="p-2 h-fit cursor-pointer"
                   onClick={() => {
                     setOpenMobile(false);
-                    router.push("/");
-                    router.refresh();
+                    if (botId) {
+                      console.log("going to embed page", botId);
+                      router.push(`/embed/${botId}`);
+                    } else {
+                      console.log(
+                        "bot id does not exist when creating new chat"
+                      );
+                      router.refresh();
+                    }
                   }}
                 >
                   <PlusIcon />
@@ -71,7 +79,9 @@ export default function BotSidebar() {
           </div>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent></SidebarContent>
+      <SidebarContent>
+        <SidebarHistory user={user} />
+      </SidebarContent>
       <SidebarFooter />
     </Sidebar>
   );

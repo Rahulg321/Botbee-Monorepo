@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import BotSidebar from "@/components/bot-sidebar";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -31,11 +33,15 @@ const ibmPlexMono = IBM_Plex_Mono({
   weight: ["400", "700"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
+  if (!session) redirect("/login");
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -49,7 +55,7 @@ export default function RootLayout({
         >
           <SessionProvider>
             <SidebarProvider>
-              <BotSidebar />
+              <BotSidebar user={session.user} />
               <SidebarTrigger />
               <main className="flex-1 p-4">{children}</main>
             </SidebarProvider>
