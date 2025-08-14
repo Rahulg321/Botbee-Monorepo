@@ -16,10 +16,16 @@
     "@repo/math": "*",
     "@repo/shared": "*",
     "@repo/ui": "*",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
     "@types/pdf-parse": "^1.1.5",
+    "@types/xlsx": "^0.0.36",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "mammoth": "^1.10.0",
-    "pdf-parse": "^1.1.1"
+    "multer": "^2.0.2",
+    "pdf-parse": "^1.1.1",
+    "xlsx": "^0.18.5"
   }
 }
