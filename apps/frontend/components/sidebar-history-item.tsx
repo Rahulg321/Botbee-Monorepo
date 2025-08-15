@@ -34,6 +34,8 @@ const PureChatItem = ({
   onDelete: (chatId: string) => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
+  console.log("chat inside history item", chat);
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>

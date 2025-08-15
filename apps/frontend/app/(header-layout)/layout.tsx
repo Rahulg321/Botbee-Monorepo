@@ -57,7 +57,7 @@ export default async function RootLayout({
             <SidebarProvider>
               <BotSidebar user={session.user} />
               <SidebarTrigger />
-              <main className="flex-1 p-4">{children}</main>
+              <main className="flex-1 pb-6 md:pb-10">{children}</main>
             </SidebarProvider>
           </SessionProvider>
         </ThemeProvider>

@@ -1,7 +1,9 @@
 import { auth } from "@/auth";
 import { generateTitleFromUserMessage } from "@/lib/actions";
+import { buildBotSystemPrompt } from "@/lib/ai/prompts";
 import { googleAISDKProvider } from "@/lib/ai/providers";
 import { askForConfirmation } from "@/lib/ai/tools/ask-confirmation-tool";
+import { getInformation } from "@/lib/ai/tools/find-relevant-content";
 import { weatherTool } from "@/lib/ai/tools/weather-tool";
 import { loadChat, saveChat, saveChatTitle } from "@/lib/chat-store";
 import { ChatSDKError } from "@/lib/errors";
@@ -27,9 +29,22 @@ export async function POST(req: Request) {
 
   const body = await req.json();
 
-  console.log("body inside chat request", body);
+  // console.log("body inside chat request", body);
 
-  const { id, message, model, webSearch, botId, chatId } = body;
+  const {
+    id,
+    message,
+    model,
+    webSearch,
+    botId,
+    chatId,
+    language,
+    tone,
+    greeting,
+    brandGuidelines,
+    instructions,
+    botName,
+  } = body;
 
   if (!botId) {
     return new ChatSDKError(
@@ -95,14 +110,33 @@ export async function POST(req: Request) {
 
   // append the new message to the previous messages:
 
-  const messages = [...previousMessages, message];
+  const messages = [
+    ...previousMessages,
+    // {
+    //   role: "user",
+    //   content: `The Bot Name is ${botName} and the botId is ${botId}`,
+    // },
+    message,
+  ];
+
+  console.log("messages", messages);
 
   const result = streamText({
     model: googleAISDKProvider("gemini-2.5-flash"),
-    system: "You are a helpful assistant.",
+    system:
+      buildBotSystemPrompt({
+        botId,
+        botName,
+        instructions,
+        tone,
+        language,
+        greeting,
+        brandGuidelines,
+      }) || "You are a helpful assistant.",
     messages: convertToModelMessages(messages),
     tools: {
       weatherTool,
+      getInformation,
     },
     stopWhen: stepCountIs(5),
   });

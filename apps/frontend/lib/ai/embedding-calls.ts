@@ -41,10 +41,29 @@ import { generateEmbedding } from "./embedding";
 import { db } from "@repo/db";
 
 export const findRelevantContent = async (userQuery: string, botId: string) => {
-  if (!botId) throw new Error("Bot ID is required");
+  if (!botId) {
+    console.log("Bot ID is not available inside tool call");
+    return {
+      success: false,
+      reason: "Bot ID is not available inside tool call",
+    };
+  }
+  if (!userQuery) {
+    console.log("User query is not available inside tool call");
+    return {
+      success: false,
+      reason: "User query is not available inside tool call",
+    };
+  }
 
   // 1. Generate embedding for query
   const queryEmbed = await generateEmbedding(userQuery);
+
+  if (!queryEmbed)
+    return {
+      success: false,
+      reason: "Embeddings could not be generated",
+    };
 
   // 2. Fetch top-K candidate chunks with sparse filter & vector score
 
@@ -67,10 +86,17 @@ export const findRelevantContent = async (userQuery: string, botId: string) => {
       .limit(10);
   } catch (error) {
     console.error("Error fetching candidates:", error);
-    throw error;
+    return {
+      success: false,
+      reason: "error-fetching-candidates",
+    };
   }
 
-  if (!candidates || candidates.length === 0) return null;
+  if (!candidates || candidates.length === 0)
+    return {
+      success: false,
+      reason: "No candidates found",
+    };
 
   const scores = candidates.map((c) => c.similarity);
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
@@ -84,8 +110,10 @@ export const findRelevantContent = async (userQuery: string, botId: string) => {
 
   if (filtered.length === 0) {
     return {
-      content: candidates[0]?.content,
-      similarity: candidates[0]?.similarity,
+      success: true,
+      message: "No candidates above threshold",
+      content: candidates[0]?.content || "",
+      similarity: candidates[0]?.similarity || 0,
     };
   }
 
@@ -125,7 +153,9 @@ export const findRelevantContent = async (userQuery: string, botId: string) => {
   );
 
   return {
-    content: mostRelevant.content,
-    similarity: mostRelevant.similarity,
+    success: true,
+    message: "Found relevant content",
+    content: mostRelevant.content || "",
+    similarity: mostRelevant.similarity || 0,
   };
 };

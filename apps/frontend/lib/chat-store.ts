@@ -72,7 +72,7 @@ export async function loadChat(id: string): Promise<UIMessage[]> {
     return [];
   }
 
-  console.log("inside db messages", dbMessages);
+  // console.log("inside db messages", dbMessages);
 
   return dbMessages.map(
     (message) =>

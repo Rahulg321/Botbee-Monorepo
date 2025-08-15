@@ -46,27 +46,17 @@ import {
   ToolOutput,
 } from "@/components/ai-elements/tool";
 import { toast } from "sonner";
-
-type WeatherToolInput = {
-  location: string;
-  units: "celsius" | "fahrenheit";
-};
-
-type WeatherToolOutput = {
-  location: string;
-  temperature: string;
-  conditions: string;
-  humidity: string;
-  windSpeed: string;
-  lastUpdated: string;
-};
-
-type WeatherToolUIPart = ToolUIPart<{
-  weatherTool: {
-    input: WeatherToolInput;
-    output: WeatherToolOutput;
-  };
-}>;
+import { Bot } from "@repo/db/schema";
+import {
+  GetInformationToolUIPart,
+  GetInformationToolOutput,
+  WeatherToolOutput,
+  WeatherToolUIPart,
+} from "@/lib/tool-types";
+import {
+  formatGetInformationResult,
+  formatGetWeatherResult,
+} from "@/components/tool-output-components";
 
 const models = [
   {
@@ -82,13 +72,14 @@ const models = [
 export default function BotChat({
   botId,
   chatId,
+  bot,
   initialMessages,
 }: {
   botId: string;
+  bot: Bot;
   chatId?: string | undefined;
   initialMessages?: UIMessage[];
 }) {
-  console.log("botId, chatId", { botId, chatId });
   const [input, setInput] = useState("");
   const [model, setModel] = useState<string>(models[0]?.value || "");
   const [webSearch, setWebSearch] = useState(false);
@@ -131,6 +122,12 @@ export default function BotChat({
             customKey: "customValue",
             botId: botId,
             chatId: chatId,
+            botName: bot.name,
+            language: bot.botLanguage,
+            greeting: bot.greeting,
+            instructions: bot.instructions,
+            tone: bot.tone,
+            brandGuidelines: bot.brandGuidelines,
           },
         }
       );
@@ -139,9 +136,14 @@ export default function BotChat({
   };
 
   const latestMessage = messages[messages.length - 1];
+
   const weatherTool = latestMessage?.parts?.find(
     (part) => part.type === "tool-weatherTool"
   ) as WeatherToolUIPart | undefined;
+
+  const getInformationTool = latestMessage?.parts?.find(
+    (part) => part.type === "tool-getInformation"
+  ) as GetInformationToolUIPart | undefined;
 
   return (
     <div className="relative size-full h-screen">
@@ -198,9 +200,38 @@ export default function BotChat({
                               <ReasoningContent>{part.text}</ReasoningContent>
                             </Reasoning>
                           );
+                        case "tool-getInformation":
+                          return (
+                            <Tool defaultOpen={true} key={`${message.id}-${i}`}>
+                              <ToolHeader
+                                type="tool-getInformation"
+                                state={
+                                  getInformationTool?.state as
+                                    | "input-streaming"
+                                    | "input-available"
+                                    | "output-available"
+                                    | "output-error"
+                                }
+                              />
+                              <ToolContent>
+                                <ToolInput input={getInformationTool?.input} />
+                                <ToolOutput
+                                  output={
+                                    <Response>
+                                      {getInformationTool?.output &&
+                                        formatGetInformationResult(
+                                          getInformationTool?.output as GetInformationToolOutput
+                                        )}
+                                    </Response>
+                                  }
+                                  errorText={getInformationTool?.errorText}
+                                />
+                              </ToolContent>
+                            </Tool>
+                          );
                         case "tool-weatherTool":
                           return (
-                            <Tool defaultOpen={true}>
+                            <Tool defaultOpen={true} key={`${message.id}-${i}`}>
                               <ToolHeader
                                 type="tool-weatherTool"
                                 state={
@@ -217,7 +248,7 @@ export default function BotChat({
                                   output={
                                     <Response>
                                       {weatherTool?.output &&
-                                        formatWeatherResult(
+                                        formatGetWeatherResult(
                                           weatherTool?.output as WeatherToolOutput
                                         )}
                                     </Response>
@@ -281,17 +312,4 @@ export default function BotChat({
       </div>
     </div>
   );
-}
-
-function formatWeatherResult(result: WeatherToolOutput): string {
-  console.log("inside formatWeatherResult", result);
-
-  return `**Weather for ${result.location || "unknown"}**
-
-**Temperature:** ${result.temperature || "unknown"}  
-**Conditions:** ${result.conditions || "unknown"}  
-**Humidity:** ${result.humidity || "unknown"}  
-**Wind Speed:** ${result.windSpeed || "unknown"}  
-
-*Last updated: ${result.lastUpdated || "unknown"}*`;
 }

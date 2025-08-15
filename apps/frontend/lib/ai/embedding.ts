@@ -33,13 +33,31 @@ export function rowsToTextChunks(
   return chunks;
 }
 
-export const generateEmbedding = async (value: string): Promise<number[]> => {
-  const input = value.replaceAll("\\n", " ");
-  const { embedding } = await embed({
-    model: embeddingModel,
-    value: input,
-  });
-  return embedding;
+/**
+ * This function is used to generate an embedding for a given value
+ * It will return an array of numbers that represent the embedding
+ *
+ * @param value - The value to generate an embedding for
+ * @returns An array of numbers that represent the embedding
+ */
+export const generateEmbedding = async (
+  value: string
+): Promise<number[] | null> => {
+  try {
+    if (!value) return null;
+
+    if (value.length === 0) return null;
+
+    const input = value.replaceAll("\\n", " ");
+    const { embedding } = await embed({
+      model: embeddingModel,
+      value: input,
+    });
+    return embedding;
+  } catch (error) {
+    console.error("Error generating embedding:", error);
+    return null;
+  }
 };
 
 /**

@@ -1,7 +1,7 @@
 import { loadChat } from "@/lib/chat-store";
 import BotChat from "../bot-chat";
-import { redirect } from "next/navigation";
-import { getBotChatById } from "@/lib/queries";
+import { notFound, redirect } from "next/navigation";
+import { getBotById, getBotChatById } from "@/lib/queries";
 
 export default async function Page(props: {
   params: Promise<{ botId: string; chatId: string }>;
@@ -15,7 +15,22 @@ export default async function Page(props: {
     redirect(`/embed/${botId}`);
   }
 
+  const bot = await getBotById(botId);
+
+  if (!bot) {
+    return notFound();
+  }
+
   const messages = await loadChat(chatId);
 
-  return <BotChat botId={botId} chatId={chatId} initialMessages={messages} />;
+  return (
+    <div>
+      <BotChat
+        botId={botId}
+        chatId={chatId}
+        bot={bot}
+        initialMessages={messages}
+      />
+    </div>
+  );
 }
