@@ -106,15 +106,6 @@ function BotCard({ bot }: { bot: Bot }) {
       <CardFooter className="pt-0">
         <div className="flex flex-col gap-2 w-full">
           <div className="flex gap-2">
-            <Button asChild size="sm" variant="outline" className="flex-1">
-              <Link
-                href={`/created-bots/${bot.id}`}
-                className="flex items-center gap-2"
-              >
-                <Settings className="size-4" />
-                Configure
-              </Link>
-            </Button>
             <Button asChild size="sm" className="flex-1">
               <Link
                 href={`/embed/${bot.id}`}
@@ -125,7 +116,7 @@ function BotCard({ bot }: { bot: Bot }) {
               </Link>
             </Button>
           </div>
-          <Button asChild size="sm" variant="ghost" className="w-full">
+          <Button asChild className="w-full">
             <Link
               href={`/created-bots/${bot.id}/edit`}
               className="flex items-center gap-2"

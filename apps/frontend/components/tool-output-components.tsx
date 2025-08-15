@@ -16,8 +16,6 @@ export function formatGetWeatherResult(result: WeatherToolOutput): string {
 export function formatGetInformationResult(
   result: GetInformationToolOutput
 ): string {
-  console.log("inside formatGetInformationResult", result);
-
   if (result.success) {
     const similarityPercentage =
       typeof result.similarity === "number"

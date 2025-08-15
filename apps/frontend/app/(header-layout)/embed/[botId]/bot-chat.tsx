@@ -10,19 +10,6 @@ import {
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
-import {
-  PromptInput,
-  PromptInputButton,
-  PromptInputModelSelect,
-  PromptInputModelSelectContent,
-  PromptInputModelSelectItem,
-  PromptInputModelSelectTrigger,
-  PromptInputModelSelectValue,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputTools,
-} from "@/components/ai-elements/prompt-input";
 import { useState } from "react";
 import { Response } from "@/components/ai-elements/response";
 import { GlobeIcon } from "lucide-react";
@@ -57,17 +44,8 @@ import {
   formatGetInformationResult,
   formatGetWeatherResult,
 } from "@/components/tool-output-components";
-
-const models = [
-  {
-    name: "GPT 4o",
-    value: "openai/gpt-4o",
-  },
-  {
-    name: "Gemini 2.5 Flash",
-    value: "google/gemini-2.5-flash",
-  },
-];
+import BotPromptForm from "./bot-prompt-form";
+import { availableBotModels } from "@/lib/available-bot-models";
 
 export default function BotChat({
   botId,
@@ -80,9 +58,7 @@ export default function BotChat({
   chatId?: string | undefined;
   initialMessages?: UIMessage[];
 }) {
-  const [input, setInput] = useState("");
-  const [model, setModel] = useState<string>(models[0]?.value || "");
-  const [webSearch, setWebSearch] = useState(false);
+  console.log("insdie bot chat");
 
   const { messages, sendMessage, status } = useChat({
     id: chatId,
@@ -111,29 +87,6 @@ export default function BotChat({
       console.log("Received data part from server:", data);
     },
   });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (input.trim()) {
-      sendMessage(
-        { text: input },
-        {
-          body: {
-            customKey: "customValue",
-            botId: botId,
-            chatId: chatId,
-            botName: bot.name,
-            language: bot.botLanguage,
-            greeting: bot.greeting,
-            instructions: bot.instructions,
-            tone: bot.tone,
-            brandGuidelines: bot.brandGuidelines,
-          },
-        }
-      );
-      setInput("");
-    }
-  };
 
   const latestMessage = messages[messages.length - 1];
 
@@ -271,44 +224,13 @@ export default function BotChat({
           <ConversationScrollButton />
         </Conversation>
 
-        <PromptInput onSubmit={handleSubmit} className="mt-4">
-          <PromptInputTextarea
-            onChange={(e) => setInput(e.target.value)}
-            value={input}
-          />
-          <PromptInputToolbar>
-            <PromptInputTools>
-              <PromptInputButton
-                variant={webSearch ? "default" : "ghost"}
-                onClick={() => setWebSearch(!webSearch)}
-              >
-                <GlobeIcon size={16} />
-                <span>Search</span>
-              </PromptInputButton>
-              <PromptInputModelSelect
-                onValueChange={(value) => {
-                  setModel(value);
-                }}
-                value={model}
-              >
-                <PromptInputModelSelectTrigger>
-                  <PromptInputModelSelectValue />
-                </PromptInputModelSelectTrigger>
-                <PromptInputModelSelectContent>
-                  {models.map((model) => (
-                    <PromptInputModelSelectItem
-                      key={model.value}
-                      value={model.value}
-                    >
-                      {model.name}
-                    </PromptInputModelSelectItem>
-                  ))}
-                </PromptInputModelSelectContent>
-              </PromptInputModelSelect>
-            </PromptInputTools>
-            <PromptInputSubmit disabled={!input} status={status} />
-          </PromptInputToolbar>
-        </PromptInput>
+        <BotPromptForm
+          bot={bot}
+          botId={botId}
+          chatId={chatId}
+          onSendMessage={sendMessage}
+          status={status}
+        />
       </div>
     </div>
   );
