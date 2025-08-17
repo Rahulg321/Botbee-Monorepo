@@ -73,8 +73,14 @@ const data = {
       icon: SquareTerminal,
     },
     {
-      title: "Models",
-      url: "/models",
+      title: "Prompt Gallery",
+      url: "/prompt-gallery",
+      icon: GalleryVerticalEnd,
+    },
+
+    {
+      title: "Characters",
+      url: "/characters",
       icon: Bot,
     },
     {
@@ -109,7 +115,8 @@ const data = {
 export function DashboardSidebar({ user }: { user: User }) {
   const router = useRouter();
   const pathname = usePathname();
-  const isActive = (url: string) => pathname === url;
+  const isActive = (url: string) => pathname.includes(url);
+
   const {
     state,
     open,

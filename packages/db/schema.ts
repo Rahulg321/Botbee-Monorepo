@@ -750,3 +750,106 @@ export const botChatStream = pgTable("bot_chat_stream", {
 });
 
 export type BotChatStream = InferSelectModel<typeof botChatStream>;
+
+export const promptCategory = pgTable("prompt_category", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export type PromptCategory = InferSelectModel<typeof promptCategory>;
+
+export const promptStatus = pgEnum("prompt_status", [
+  "draft",
+  "published",
+  "archived",
+]);
+
+export const prompt = pgTable(
+  "prompt",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    title: text("title").notNull(),
+    description: text("description"),
+    status: promptStatus("status").notNull().default("draft"),
+    content: text("content").notNull(),
+    categoryId: uuid("category_id")
+      .references(() => promptCategory.id, { onDelete: "cascade" })
+      .notNull(),
+    //it means that the prompt can be specific to a user or created by the system itself
+    userId: uuid("userId").references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdRef: foreignKey({
+      columns: [table.userId],
+      foreignColumns: [user.id],
+    }),
+
+    categoryIdRef: foreignKey({
+      columns: [table.categoryId],
+      foreignColumns: [promptCategory.id],
+    }),
+  })
+);
+
+export type Prompt = InferSelectModel<typeof prompt>;
+
+export const aiCharacterCategory = pgTable("ai_character_category", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export type AiCharacterCategory = InferSelectModel<typeof aiCharacterCategory>;
+
+export const aiCharacterStatus = pgEnum("ai_character_status", [
+  "draft",
+  "published",
+  "archived",
+]);
+
+export const aiCharacter = pgTable(
+  "ai_character",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    name: text("name").notNull(),
+    description: text("description"),
+    fullDescription: text("full_description"),
+    personality: text("personality"),
+    systemPrompt: text("system_prompt"),
+    behaviorAndTone: text("behavior_and_tone"),
+    conversationTone: text("conversation_tone"),
+    brandGuidelines: text("brand_guidelines"),
+    customGreeting: text("custom_greeting"),
+    temperature: integer("temperature").notNull().default(0.7),
+    maxTokens: integer("max_tokens").notNull().default(4096),
+    prompts: text("prompts").array().notNull().default([]),
+    categoryId: uuid("category_id")
+      .references(() => aiCharacterCategory.id, { onDelete: "cascade" })
+      .notNull(),
+
+    userId: uuid("userId").references(() => user.id, { onDelete: "cascade" }),
+    status: aiCharacterStatus("status").notNull().default("draft"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdRef: foreignKey({
+      columns: [table.userId],
+      foreignColumns: [user.id],
+    }),
+
+    categoryIdRef: foreignKey({
+      columns: [table.categoryId],
+      foreignColumns: [aiCharacterCategory.id],
+    }),
+  })
+);
+
+export type AiCharacter = InferSelectModel<typeof aiCharacter>;

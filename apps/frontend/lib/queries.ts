@@ -36,6 +36,8 @@ import {
   botChats,
   botChatMessages,
   type BotChat,
+  promptCategory,
+  prompt,
 } from "@repo/db/schema";
 import { BotDocument, BotWithDocumentsCount } from "@repo/shared/types";
 import { db } from "@repo/db";
@@ -221,6 +223,11 @@ export async function getBotChatById({ id }: { id: string }) {
   }
 }
 
+/**
+ * Get a bot message by id
+ * @param id - The id of the message
+ * @returns The message
+ */
 export async function getBotMessageById({ id }: { id: string }) {
   try {
     return await db
@@ -494,5 +501,74 @@ export async function createUser(email: string, password: string) {
   } catch (error) {
     console.log("An error occured trying to create user", error);
     throw new Error("Failed to create user");
+  }
+}
+
+/**
+ * Get all prompt categories
+ * @returns The prompt categories
+ */
+export async function getPromptCategories() {
+  try {
+    return await db.select().from(promptCategory);
+  } catch (error) {
+    console.log("An error occured trying to get prompt categories", error);
+    return null;
+  }
+}
+
+/**
+ * Get a prompt by id with category information
+ * @param promptId - The id of the prompt
+ * @returns The prompt with category details
+ */
+export async function getPromptById(promptId: string) {
+  try {
+    const result = await db
+      .select({
+        id: prompt.id,
+        title: prompt.title,
+        description: prompt.description,
+        status: prompt.status,
+        content: prompt.content,
+        categoryId: prompt.categoryId,
+        userId: prompt.userId,
+        createdAt: prompt.createdAt,
+
+        category: {
+          id: promptCategory.id,
+          name: promptCategory.name,
+          description: promptCategory.description,
+        },
+      })
+      .from(prompt)
+      .leftJoin(promptCategory, eq(prompt.categoryId, promptCategory.id))
+      .where(eq(prompt.id, promptId))
+      .limit(1);
+
+    return result[0] || null;
+  } catch (error) {
+    console.log("An error occurred trying to get prompt by id", error);
+    return null;
+  }
+}
+
+/**
+ * Get all prompts
+ * @returns The prompts
+ */
+export async function getAllPrompts() {
+  try {
+    return await db
+      .select({
+        id: prompt.id,
+        title: prompt.title,
+        description: prompt.description,
+        status: prompt.status,
+      })
+      .from(prompt);
+  } catch (error) {
+    console.log("An error occured trying to get all prompts", error);
+    return null;
   }
 }
