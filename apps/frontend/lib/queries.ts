@@ -728,6 +728,7 @@ export async function getAiCharacterById(characterId: string) {
         status: aiCharacter.status,
         createdAt: aiCharacter.createdAt,
         updatedAt: aiCharacter.updatedAt,
+        userId: aiCharacter.userId,
         category: {
           id: aiCharacterCategory.id,
           name: aiCharacterCategory.name,

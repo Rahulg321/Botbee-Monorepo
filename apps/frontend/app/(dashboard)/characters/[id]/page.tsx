@@ -12,12 +12,19 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getAiCharacterById } from "@/lib/queries";
+import { DeleteCharacterAlert } from "@/components/dialogs/delete-character-alert";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 const SingleCharacterPage = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) => {
+  const userSession = await auth();
+
+  if (!userSession) redirect("/login");
+
   const { id } = await params;
   const characterModel = await getAiCharacterById(id);
 
@@ -61,12 +68,15 @@ const SingleCharacterPage = async ({
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
-          {/* Hero Section */}
+        {characterModel.userId &&
+          characterModel.userId === userSession?.user?.id && (
+            <div>
+              <DeleteCharacterAlert characterId={id} />
+            </div>
+          )}
+
+        <div className="max-w-4xl mx-auto   space-y-8">
           <div className="text-center space-y-4">
-            <div
-              className={`w-32 h-32 mx-auto rounded-2xl flex items-center justify-center overflow-hidden`}
-            ></div>
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 {characterModel.name}

@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { auth } from "@/auth";
+import { DeletePromptAlert } from "@/components/dialogs/delete-prompt-alert";
 import { getPromptById } from "@/lib/queries";
 import { ArrowLeft, Copy, Heart, Share2 } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import React from "react";
 
 const SinglePromptPage = async ({
@@ -11,6 +13,10 @@ const SinglePromptPage = async ({
   params: Promise<{ id: string }>;
 }) => {
   const { id } = await params;
+
+  const userSession = await auth();
+
+  if (!userSession) redirect("/login");
 
   const foundPrompt = await getPromptById(id);
 
@@ -51,7 +57,12 @@ const SinglePromptPage = async ({
           </div>
         </div>
 
-        {/* Content */}
+        {foundPrompt.userId && foundPrompt.userId === userSession?.user?.id && (
+          <div>
+            <DeletePromptAlert promptId={id} />
+          </div>
+        )}
+
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
