@@ -3,102 +3,41 @@ import { Search, Plus } from "lucide-react";
 import Link from "next/link";
 import { AddPromptDialog } from "@/components/dialogs/add-prompt-dialog";
 import { Button } from "@/components/ui/button";
-import { getAllPrompts } from "@/lib/queries";
+import {
+  getAllPrompts,
+  getAllTemplatePrompts,
+  getAllPromptsByUserId,
+} from "@/lib/queries";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-const prompts = [
-  {
-    id: "code-expert",
-    number: 1,
-    title: "Code Expert",
-    slug: "/code-expert",
-    author: "@masterdee",
-    description: "Expert-level coding assistance and code review",
-    category: "Development",
-  },
-  {
-    id: "linux-command-expert",
-    number: 2,
-    title: "Linux Command Expert",
-    slug: "/linux-command-expert",
-    author: "@maker318",
-    description: "Advanced Linux command line operations and scripting",
-    category: "System Administration",
-  },
-  {
-    id: "stable-diffusion",
-    number: 3,
-    title: "Stable Diffusion",
-    slug: "/stable-diffusion",
-    author: "@stewart",
-    description: "AI image generation and prompt engineering",
-    category: "AI/ML",
-  },
-  {
-    id: "grammar-check",
-    number: 4,
-    title: "Grammar Check And Rewrite",
-    slug: "/grammar-check",
-    author: "@hub",
-    description: "Professional writing assistance and grammar correction",
-    category: "Writing",
-  },
-  {
-    id: "multi-agents",
-    number: 5,
-    title: "Multi Agents",
-    slug: "/multi-agents",
-    author: "@stewart",
-    description: "Coordinated AI agent systems and workflows",
-    category: "AI/ML",
-  },
-  {
-    id: "document-extraction",
-    number: 6,
-    title: "Document Information Extraction",
-    slug: "/document-information-extraction",
-    author: "@billybones",
-    description: "Extract and analyze information from documents",
-    category: "Data Processing",
-  },
-  {
-    id: "prompt-enhancer",
-    number: 7,
-    title: "Prompt Enhancer",
-    slug: "/prompt-enhancer",
-    author: "@kuldeepluvani",
-    description: "Improve and optimize AI prompts for better results",
-    category: "AI/ML",
-  },
-  {
-    id: "role-playing",
-    number: 8,
-    title: "Role-Playing",
-    slug: "/rp",
-    author: "@tsubaki",
-    description: "Interactive character roleplay and storytelling",
-    category: "Entertainment",
-  },
-  {
-    id: "code-optimization",
-    number: 9,
-    title: "Code Optimization",
-    slug: "/code-optimization",
-    author: "@hub",
-    description: "Performance optimization and code refactoring",
-    category: "Development",
-  },
-  {
-    id: "webcrawler",
-    number: 10,
-    title: "Webcrawler",
-    slug: "/webcrawler",
-    author: "@kalleo",
-    description: "Web scraping and data extraction automation",
-    category: "Data Processing",
-  },
-];
+// Extracted prompt component
+const PromptItem = ({ prompt, href }: { prompt: any; href: string }) => {
+  return (
+    <Link href={href} className="block group">
+      <div className="p-3 rounded-md hover:bg-accent/50 transition-colors">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+              {prompt.title}
+            </h3>
+            {prompt.description && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {prompt.description}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
 
-const PromptGalleryPage = () => {
+const PromptGalleryPage = async () => {
+  const userSession = await auth();
+
+  if (!userSession) redirect("/login");
+
   return (
     <div>
       <div className="min-h-screen bg-background">
@@ -143,7 +82,7 @@ const PromptGalleryPage = () => {
               <div className="p-4">
                 <div className="space-y-2">
                   <Suspense fallback={<div>Loading...</div>}>
-                    <FetchPrompts />
+                    <FetchPrompts userId={userSession.user.id} />
                   </Suspense>
                 </div>
               </div>
@@ -157,36 +96,52 @@ const PromptGalleryPage = () => {
 
 export default PromptGalleryPage;
 
-const FetchPrompts = async () => {
-  const prompts = await getAllPrompts();
-
-  if (!prompts) {
-    return <div>No prompts found</div>;
-  }
+const FetchPrompts = async ({ userId }: { userId: string }) => {
+  const [userPrompts, templatePrompts] = await Promise.all([
+    getAllPromptsByUserId(userId),
+    getAllTemplatePrompts(),
+  ]);
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold text-foreground mb-4">
-        {prompts.length} Prompts
-      </h2>
+    <div className="space-y-8">
+      {/* User Prompts Section */}
+      <div>
+        <h2 className="text-xl font-semibold text-foreground mb-4">
+          My Prompts ({userPrompts?.length})
+        </h2>
+        <div className="space-y-2">
+          {userPrompts &&
+            userPrompts.map((prompt) => (
+              <PromptItem
+                key={prompt.id}
+                prompt={prompt}
+                href={`/prompt-gallery/${prompt.id}`}
+              />
+            ))}
+        </div>
+      </div>
 
-      {prompts.map((prompt, index) => (
-        <Link
-          key={prompt.id}
-          href={`/prompt-gallery/${prompt.id}`}
-          className="block group"
-        >
-          <div className="p-3 rounded-md hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {prompt.title}
-                </h3>
-              </div>
-            </div>
-          </div>
-        </Link>
-      ))}
+      {/* Template Prompts Section */}
+      <div>
+        <h2 className="text-xl font-semibold text-foreground mb-4">
+          Template Prompts ({templatePrompts?.length})
+        </h2>
+        <div className="space-y-2">
+          {templatePrompts && templatePrompts.length > 0 ? (
+            templatePrompts.map((prompt) => (
+              <PromptItem
+                key={prompt.id}
+                prompt={prompt}
+                href={`/prompt-gallery/${prompt.id}`}
+              />
+            ))
+          ) : (
+            <p className="text-muted-foreground text-center py-4">
+              No template prompts available.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

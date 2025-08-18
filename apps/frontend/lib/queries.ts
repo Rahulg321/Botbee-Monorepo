@@ -12,6 +12,7 @@ import {
   lt,
   ilike,
   type SQL,
+  isNull,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -38,6 +39,8 @@ import {
   type BotChat,
   promptCategory,
   prompt,
+  aiCharacterCategory,
+  aiCharacter,
 } from "@repo/db/schema";
 import { BotDocument, BotWithDocumentsCount } from "@repo/shared/types";
 import { db } from "@repo/db";
@@ -569,6 +572,179 @@ export async function getAllPrompts() {
       .from(prompt);
   } catch (error) {
     console.log("An error occured trying to get all prompts", error);
+    return null;
+  }
+}
+
+/**
+ * Get all template prompts
+ * @returns The template prompts
+ */
+export async function getAllTemplatePrompts() {
+  //get all prompts where userId is undefined
+
+  try {
+    return await db.select().from(prompt).where(isNull(prompt.userId));
+  } catch (error) {
+    console.log("An error occured trying to get all template prompts", error);
+    return null;
+  }
+}
+
+/**
+ * Get all prompts by user id
+ * @param userId - The id of the user
+ * @returns The prompts by user id
+ */
+export async function getAllPromptsByUserId(userId: string) {
+  try {
+    return await db.select().from(prompt).where(eq(prompt.userId, userId));
+  } catch (error) {
+    console.log("An error occured trying to get all prompts by user id", error);
+    return null;
+  }
+}
+
+/**
+ * Get all ai character categories
+ * @returns The ai character categories
+ */
+export async function getAiCharacterCategories() {
+  try {
+    return await db.select().from(aiCharacterCategory);
+  } catch (error) {
+    console.log(
+      "An error occured trying to get ai character categories",
+      error
+    );
+    return null;
+  }
+}
+
+/**
+ * Get all ai characters by user id with category information
+ * @param userId - The id of the user
+ * @returns The ai characters by user id with category details
+ */
+export async function getAiCharactersByUserId(userId: string) {
+  try {
+    return await db
+      .select({
+        id: aiCharacter.id,
+        name: aiCharacter.name,
+        description: aiCharacter.description,
+        fullDescription: aiCharacter.fullDescription,
+        personality: aiCharacter.personality,
+        systemPrompt: aiCharacter.systemPrompt,
+        behaviorAndTone: aiCharacter.behaviorAndTone,
+        conversationTone: aiCharacter.conversationTone,
+        brandGuidelines: aiCharacter.brandGuidelines,
+        customGreeting: aiCharacter.customGreeting,
+        prompts: aiCharacter.prompts,
+        status: aiCharacter.status,
+        createdAt: aiCharacter.createdAt,
+        updatedAt: aiCharacter.updatedAt,
+        category: {
+          id: aiCharacterCategory.id,
+          name: aiCharacterCategory.name,
+          description: aiCharacterCategory.description,
+        },
+      })
+      .from(aiCharacter)
+      .leftJoin(
+        aiCharacterCategory,
+        eq(aiCharacter.categoryId, aiCharacterCategory.id)
+      )
+      .where(eq(aiCharacter.userId, userId));
+  } catch (error) {
+    console.log(
+      "An error occured trying to get ai characters by user id",
+      error
+    );
+    return null;
+  }
+}
+
+/**
+ * Get all template ai characters with category information, these ai characters were created by the system and not by the user
+ * @returns The template ai characters with category details
+ */
+export async function getTemplateAiCharacters() {
+  try {
+    return await db
+      .select({
+        id: aiCharacter.id,
+        name: aiCharacter.name,
+        description: aiCharacter.description,
+        fullDescription: aiCharacter.fullDescription,
+        personality: aiCharacter.personality,
+        systemPrompt: aiCharacter.systemPrompt,
+        behaviorAndTone: aiCharacter.behaviorAndTone,
+        conversationTone: aiCharacter.conversationTone,
+        brandGuidelines: aiCharacter.brandGuidelines,
+        customGreeting: aiCharacter.customGreeting,
+        prompts: aiCharacter.prompts,
+        status: aiCharacter.status,
+        createdAt: aiCharacter.createdAt,
+        updatedAt: aiCharacter.updatedAt,
+        category: {
+          id: aiCharacterCategory.id,
+          name: aiCharacterCategory.name,
+          description: aiCharacterCategory.description,
+        },
+      })
+      .from(aiCharacter)
+      .leftJoin(
+        aiCharacterCategory,
+        eq(aiCharacter.categoryId, aiCharacterCategory.id)
+      )
+      .where(isNull(aiCharacter.userId));
+  } catch (error) {
+    console.log("An error occured trying to get template ai characters", error);
+    return null;
+  }
+}
+
+/**
+ * Get an ai character by id with category information
+ * @param characterId - The id of the ai character
+ * @returns The ai character with category details
+ */
+export async function getAiCharacterById(characterId: string) {
+  try {
+    const [foundCharacter] = await db
+      .select({
+        id: aiCharacter.id,
+        name: aiCharacter.name,
+        description: aiCharacter.description,
+        fullDescription: aiCharacter.fullDescription,
+        personality: aiCharacter.personality,
+        systemPrompt: aiCharacter.systemPrompt,
+        behaviorAndTone: aiCharacter.behaviorAndTone,
+        conversationTone: aiCharacter.conversationTone,
+        brandGuidelines: aiCharacter.brandGuidelines,
+        customGreeting: aiCharacter.customGreeting,
+        prompts: aiCharacter.prompts,
+        status: aiCharacter.status,
+        createdAt: aiCharacter.createdAt,
+        updatedAt: aiCharacter.updatedAt,
+        category: {
+          id: aiCharacterCategory.id,
+          name: aiCharacterCategory.name,
+          description: aiCharacterCategory.description,
+        },
+      })
+      .from(aiCharacter)
+      .leftJoin(
+        aiCharacterCategory,
+        eq(aiCharacter.categoryId, aiCharacterCategory.id)
+      )
+      .where(eq(aiCharacter.id, characterId))
+      .limit(1);
+
+    return foundCharacter;
+  } catch (error) {
+    console.log("An error occured trying to get ai character by id", error);
     return null;
   }
 }
