@@ -16,6 +16,21 @@ import { DeleteCharacterAlert } from "@/components/dialogs/delete-character-aler
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const { id } = await params;
+
+  const characterModel = await getAiCharacterById(id);
+
+  return {
+    title: characterModel?.name || "Character",
+    description: characterModel?.description || "Character Description",
+  };
+};
+
 const SingleCharacterPage = async ({
   params,
 }: {
@@ -35,12 +50,12 @@ const SingleCharacterPage = async ({
           <h1 className="text-2xl font-bold text-foreground mb-4">
             Model Not Found
           </h1>
-          <Link href="/characters">
-            <Button variant="outline">
+          <Button variant="outline" asChild>
+            <Link href="/characters">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Characters
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     );
@@ -49,7 +64,6 @@ const SingleCharacterPage = async ({
   return (
     <div>
       <div className="min-h-screen bg-background">
-        {/* Header */}
         <div className="border-b border-border/40">
           <div className="max-w-4xl mx-auto px-6 py-4">
             <div className="flex items-center gap-4">
@@ -70,7 +84,7 @@ const SingleCharacterPage = async ({
 
         {characterModel.userId &&
           characterModel.userId === userSession?.user?.id && (
-            <div>
+            <div className="max-w-4xl mx-auto px-6 py-4">
               <DeleteCharacterAlert characterId={id} />
             </div>
           )}
@@ -88,15 +102,15 @@ const SingleCharacterPage = async ({
             <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
               <Badge variant="outline">{characterModel.category?.name}</Badge>
             </div>
-            <Button size="lg" className="mt-4">
-              <Users className="w-4 h-4 mr-2" />
-              Start Conversation
+            <Button size="lg" className="mt-4" asChild>
+              <Link href={`/characters/${id}/chat`}>
+                <Users className="w-4 h-4 mr-2" />
+                Start Conversation
+              </Link>
             </Button>
           </div>
 
-          {/* Model Information Sections */}
           <div className="space-y-6">
-            {/* About */}
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" />

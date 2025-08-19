@@ -7,6 +7,8 @@ import { eq } from "drizzle-orm";
 
 /**
  * Delete a prompt by its id
+ * @param promptId - The id of the prompt to delete
+ * @returns {Promise<{success: boolean, message: string}>} - A promise that resolves to an object with a success property and a message property
  */
 export async function deletePrompt(promptId: string) {
   const userSession = await auth();
