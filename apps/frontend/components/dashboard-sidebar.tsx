@@ -53,9 +53,9 @@ const data = {
       icon: Bot,
     },
     {
-      title: "Personalization",
-      url: "/personalization",
-      icon: Brain,
+      title: "Voices",
+      url: "/voices",
+      icon: Mic,
     },
     {
       title: "Analytics",

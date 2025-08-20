@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Settings,
   Zap,
+  Pencil,
 } from "lucide-react";
 import Link from "next/link";
 import { getAiCharacterById } from "@/lib/queries";
@@ -62,8 +63,8 @@ const SingleCharacterPage = async ({
   }
 
   return (
-    <div>
-      <div className="min-h-screen bg-background">
+    <div className="">
+      <div className="min-h-screen ">
         <div className="border-b border-border/40">
           <div className="max-w-4xl mx-auto px-6 py-4">
             <div className="flex items-center gap-4">
@@ -84,12 +85,24 @@ const SingleCharacterPage = async ({
 
         {characterModel.userId &&
           characterModel.userId === userSession?.user?.id && (
-            <div className="max-w-4xl mx-auto px-6 py-4">
+            <div className="">
               <DeleteCharacterAlert characterId={id} />
             </div>
           )}
 
-        <div className="max-w-4xl mx-auto   space-y-8">
+        {characterModel.userId &&
+          characterModel.userId === userSession?.user?.id && (
+            <div className="">
+              <Button variant="outline" asChild>
+                <Link href={`/characters/${id}/edit`}>
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit
+                </Link>
+              </Button>
+            </div>
+          )}
+
+        <div className="max-w-4xl mx-auto block-space space-y-8">
           <div className="text-center space-y-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">

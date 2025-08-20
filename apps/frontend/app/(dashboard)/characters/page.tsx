@@ -148,7 +148,7 @@ const FetchCharacters = async ({ userId }: { userId: string }) => {
       {/* AI Generated Characters Section */}
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-4">
-          AI Generated Characters ({aiCharacters?.length})
+          Template Characters ({aiCharacters?.length})
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {aiCharacters && aiCharacters.length > 0 ? (
