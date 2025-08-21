@@ -61,10 +61,10 @@ export default async function RootLayout({
           <SessionProvider>
             <SidebarProvider>
               <DashboardSidebar user={session.user} />
-              <SidebarInset>
+              <main className="flex-1 ">
                 <SidebarTrigger className="-ml-1" />
                 {children}
-              </SidebarInset>
+              </main>
             </SidebarProvider>
           </SessionProvider>
         </ThemeProvider>

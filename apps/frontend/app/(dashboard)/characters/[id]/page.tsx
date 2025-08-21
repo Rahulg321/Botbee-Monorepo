@@ -16,6 +16,7 @@ import { getAiCharacterById } from "@/lib/queries";
 import { DeleteCharacterAlert } from "@/components/dialogs/delete-character-alert";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 
 export const generateMetadata = async ({
   params,
@@ -67,43 +68,49 @@ const SingleCharacterPage = async ({
       <div className="min-h-screen ">
         <div className="border-b border-border/40">
           <div className="max-w-4xl mx-auto px-6 py-4">
-            <div className="flex items-center gap-4">
-              <Link href="/characters">
-                <Button variant="ghost" size="sm" className="cursor-pointer">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-              </Link>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground font-medium">
-                  CHARACTER
-                </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Link href="/characters">
+                  <Button variant="ghost" size="sm" className="cursor-pointer">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                </Link>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground font-medium">
+                    CHARACTER
+                  </span>
+                </div>
               </div>
+
+              {/* Action Buttons - Only show for character owner */}
+              {characterModel.userId &&
+                characterModel.userId === userSession?.user?.id && (
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" asChild>
+                      <Link href={`/characters/${id}/edit`}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit
+                      </Link>
+                    </Button>
+                    <DeleteCharacterAlert characterId={id} />
+                  </div>
+                )}
             </div>
           </div>
         </div>
 
-        {characterModel.userId &&
-          characterModel.userId === userSession?.user?.id && (
-            <div className="">
-              <DeleteCharacterAlert characterId={id} />
-            </div>
-          )}
-
-        {characterModel.userId &&
-          characterModel.userId === userSession?.user?.id && (
-            <div className="">
-              <Button variant="outline" asChild>
-                <Link href={`/characters/${id}/edit`}>
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit
-                </Link>
-              </Button>
-            </div>
-          )}
-
         <div className="max-w-4xl mx-auto block-space space-y-8">
           <div className="text-center space-y-4">
+            <div className="relative w-24 h-24 mx-auto">
+              <Image
+                src={characterModel.imageUrl ?? ""}
+                alt={characterModel.name}
+                fill
+                className="rounded-full object-cover"
+              />
+            </div>
+
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 {characterModel.name}

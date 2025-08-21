@@ -54,6 +54,7 @@ const EditCharacterPage = async ({
         characterStatus={
           characterModel.status as "draft" | "published" | "archived"
         }
+        characterImage={characterModel.imageUrl ?? ""}
       />
     </div>
   );

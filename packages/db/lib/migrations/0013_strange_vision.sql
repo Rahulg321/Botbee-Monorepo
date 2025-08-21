@@ -1,0 +1,1 @@
+ALTER TABLE "ai_character" ADD COLUMN "image_url" text;

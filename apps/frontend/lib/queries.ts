@@ -641,6 +641,7 @@ export async function getAiCharactersByUserId(userId: string) {
         brandGuidelines: aiCharacter.brandGuidelines,
         customGreeting: aiCharacter.customGreeting,
         prompts: aiCharacter.prompts,
+        imageUrl: aiCharacter.imageUrl,
         status: aiCharacter.status,
         createdAt: aiCharacter.createdAt,
         updatedAt: aiCharacter.updatedAt,
@@ -687,6 +688,7 @@ export async function getTemplateAiCharacters() {
         status: aiCharacter.status,
         createdAt: aiCharacter.createdAt,
         updatedAt: aiCharacter.updatedAt,
+        imageUrl: aiCharacter.imageUrl,
         category: {
           id: aiCharacterCategory.id,
           name: aiCharacterCategory.name,
@@ -715,6 +717,7 @@ export async function getAiCharacterById(characterId: string) {
     const [foundCharacter] = await db
       .select({
         id: aiCharacter.id,
+        imageUrl: aiCharacter.imageUrl,
         name: aiCharacter.name,
         description: aiCharacter.description,
         fullDescription: aiCharacter.fullDescription,

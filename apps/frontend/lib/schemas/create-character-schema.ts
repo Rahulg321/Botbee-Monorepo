@@ -1,6 +1,22 @@
 import { z } from "zod";
 
 export const createCharacterSchema = z.object({
+  image: z
+    .instanceof(File)
+    .refine((file) => file.size <= 1024 * 1024 * 5, {
+      message: "Image must be less than 5MB",
+    })
+    .refine(
+      (file) => {
+        if (!file) return true; // allow optional
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+        return allowedTypes.includes(file.type);
+      },
+      {
+        message: "Only JPEG or JPG images are allowed",
+      }
+    )
+    .optional(),
   name: z
     .string()
     .min(1, "Name is required")

@@ -828,6 +828,8 @@ export const aiCharacter = pgTable(
     brandGuidelines: text("brand_guidelines"),
     customGreeting: text("custom_greeting"),
 
+    imageUrl: text("image_url"),
+
     prompts: text("prompts").array().notNull().default([]),
     categoryId: uuid("category_id")
       .references(() => aiCharacterCategory.id, { onDelete: "cascade" })

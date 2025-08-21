@@ -38,6 +38,7 @@ import {
 import { Loader } from "@/components/ai-elements/loader";
 import { DefaultChatTransport } from "ai";
 import { AiCharacter } from "@repo/db/schema";
+import AudioMessage from "./audio-message";
 
 const models = [
   {
@@ -51,6 +52,7 @@ const models = [
 ];
 
 const CharacterChatScreen = ({
+  characterImageUrl,
   characterName,
   categoryName,
   description,
@@ -63,6 +65,7 @@ const CharacterChatScreen = ({
   customGreeting,
   starterPrompts,
 }: {
+  characterImageUrl: string;
   characterName: string;
   categoryName: string;
   description: string;
@@ -112,74 +115,85 @@ const CharacterChatScreen = ({
   };
 
   return (
-    <div className="mx-auto p-6 relative h-screen">
-      <div className="flex flex-col h-full">
-        <Conversation className="h-full">
-          <ConversationContent>
-            {messages.map((message) => (
-              <div key={message.id}>
-                {message.role === "assistant" && (
-                  <Sources>
-                    {message.parts.map((part, i) => {
-                      switch (part.type) {
-                        case "source-url":
-                          return (
-                            <>
-                              <SourcesTrigger
-                                count={
-                                  message.parts.filter(
-                                    (part) => part.type === "source-url"
-                                  ).length
-                                }
+    <div className="flex flex-col h-full">
+      <Conversation className="flex-1 min-h-0 overflow-y-auto">
+        <ConversationContent className="">
+          {messages.map((message) => (
+            <div key={message.id}>
+              {message.role === "assistant" && (
+                <Sources>
+                  {message.parts.map((part, i) => {
+                    switch (part.type) {
+                      case "source-url":
+                        return (
+                          <>
+                            <SourcesTrigger
+                              count={
+                                message.parts.filter(
+                                  (part) => part.type === "source-url"
+                                ).length
+                              }
+                            />
+                            <SourcesContent key={`${message.id}-${i}`}>
+                              <Source
+                                key={`${message.id}-${i}`}
+                                href={part.url}
+                                title={part.url}
                               />
-                              <SourcesContent key={`${message.id}-${i}`}>
-                                <Source
-                                  key={`${message.id}-${i}`}
-                                  href={part.url}
-                                  title={part.url}
-                                />
-                              </SourcesContent>
-                            </>
-                          );
-                      }
-                    })}
-                  </Sources>
-                )}
-                <Message from={message.role} key={message.id}>
-                  <MessageContent>
-                    {message.parts.map((part, i) => {
-                      switch (part.type) {
-                        case "text":
+                            </SourcesContent>
+                          </>
+                        );
+                    }
+                  })}
+                </Sources>
+              )}
+              <Message from={message.role} key={message.id}>
+                <MessageContent>
+                  {message.parts.map((part, i) => {
+                    switch (part.type) {
+                      case "text":
+                        if (message.role === "assistant") {
                           return (
-                            <Response key={`${message.id}-${i}`}>
+                            <AudioMessage
+                              key={`${message.id}-${i}`}
+                              messageText={part.text}
+                              characterName={characterName}
+                              characterImageUrl={characterImageUrl}
+                            />
+                          );
+                        } else {
+                          return (
+                            <Response key={`${message.id}-${i}`} className="">
                               {part.text}
                             </Response>
                           );
-                        case "reasoning":
-                          return (
-                            <Reasoning
-                              key={`${message.id}-${i}`}
-                              className="w-full"
-                              isStreaming={status === "streaming"}
-                            >
-                              <ReasoningTrigger />
-                              <ReasoningContent>{part.text}</ReasoningContent>
-                            </Reasoning>
-                          );
-                        default:
-                          return null;
-                      }
-                    })}
-                  </MessageContent>
-                </Message>
-              </div>
-            ))}
-            {status === "submitted" && <Loader />}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
+                        }
+                      case "reasoning":
+                        return (
+                          <Reasoning
+                            key={`${message.id}-${i}`}
+                            className="w-full"
+                            isStreaming={status === "streaming"}
+                          >
+                            <ReasoningTrigger />
+                            <ReasoningContent>{part.text}</ReasoningContent>
+                          </Reasoning>
+                        );
+                      default:
+                        return null;
+                    }
+                  })}
+                </MessageContent>
+              </Message>
+            </div>
+          ))}
+          {status === "submitted" && <Loader />}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
 
-        <PromptInput onSubmit={handleSubmit} className="mt-4">
+      <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+        <PromptInput onSubmit={handleSubmit} className="p-4">
           <PromptInputTextarea
             onChange={(e) => setInput(e.target.value)}
             value={input}

@@ -10,6 +10,7 @@ import {
   getAiCharactersByUserId,
   getTemplateAiCharacters,
 } from "@/lib/queries";
+import Image from "next/image";
 
 // Extracted character component
 const CharacterItem = ({
@@ -24,8 +25,17 @@ const CharacterItem = ({
       <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl border-0 overflow-hidden bg-gradient-to-br from-card to-muted/20">
         <CardContent className="p-0">
           <div
-            className={`relative h-48 bg-gradient-to-br ${character.gradient} overflow-hidden`}
+            className={`relative h-48 flex items-center justify-center bg-gradient-to-br ${character.gradient} overflow-hidden`}
           >
+            <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-lg">
+              <Image
+                src={character.imageUrl ?? ""}
+                alt={character.name}
+                fill
+                className="object-cover rounded-full"
+                style={{ objectPosition: "center" }}
+              />
+            </div>
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
             <Badge
               variant="secondary"

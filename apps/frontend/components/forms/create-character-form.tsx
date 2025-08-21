@@ -29,11 +29,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X, Upload, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { createCharacter } from "@/lib/actions/create-character";
 import { useRouter } from "next/navigation";
 import { Slider } from "@/components/ui/slider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const CreateCharacterForm = ({
   userId,
@@ -43,11 +44,13 @@ const CreateCharacterForm = ({
   characterCategories: AiCharacterCategory[];
 }) => {
   const [isPending, startTransition] = React.useTransition();
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
   const router = useRouter();
 
   const form = useForm({
     resolver: zodResolver(createCharacterSchema),
     defaultValues: {
+      image: new File([""], "filename"),
       name: "",
       description: "",
       fullDescription: "",
@@ -64,6 +67,41 @@ const CreateCharacterForm = ({
   });
 
   const [newPrompt, setNewPrompt] = React.useState("");
+
+  const handleImageChange = (file: File | null) => {
+    if (file) {
+      // Validate file size
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5MB");
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Only JPEG, JPG, or PNG images are allowed");
+        return;
+      }
+
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Update form value
+      form.setValue("image", file);
+    } else {
+      setImagePreview(null);
+      form.setValue("image", new File([""], "filename"));
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    form.setValue("image", new File([""], "filename"));
+  };
 
   const addPrompt = () => {
     if (newPrompt.trim() && newPrompt.length <= 1000) {
@@ -84,19 +122,32 @@ const CreateCharacterForm = ({
   const onSubmit = (values: CreateCharacterInput) => {
     startTransition(async () => {
       try {
-        const response = await createCharacter(values, userId);
+        const formData = new FormData();
+        formData.append("name", values.name);
+        formData.append("systemPrompt", values.systemPrompt);
+        formData.append("prompts", JSON.stringify(values.prompts));
+        formData.append("categoryId", values.categoryId);
+        formData.append("status", values.status);
+        formData.append("description", values.description || "");
+        formData.append("fullDescription", values.fullDescription || "");
+        formData.append("personality", values.personality || "");
+        formData.append("behaviorAndTone", values.behaviorAndTone || "");
+        formData.append("conversationTone", values.conversationTone || "");
+        formData.append("brandGuidelines", values.brandGuidelines || "");
+        formData.append("customGreeting", values.customGreeting || "");
+
+        if (values.image) {
+          formData.append("image", values.image);
+        }
+
+        const response = await createCharacter(formData, userId);
 
         if (response.success) {
           toast.success(`Character created successfully`, {
             description: "You can now use this character in your bot",
-            action: {
-              label: "View Character",
-              onClick: () => {
-                router.push(`/characters/${response.insertedCharacter?.id}`);
-              },
-            },
           });
           form.reset();
+          setImagePreview(null);
         } else {
           toast.error(response.message);
         }
@@ -114,6 +165,83 @@ const CreateCharacterForm = ({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Image Upload */}
+            <FormField
+              control={form.control}
+              name="image"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Character Image</FormLabel>
+                  <FormControl>
+                    <div className="space-y-4">
+                      {imagePreview ? (
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-20 w-20">
+                            <AvatarImage
+                              src={imagePreview}
+                              alt="Character preview"
+                            />
+                            <AvatarFallback>CH</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="text-sm text-muted-foreground">
+                              Image uploaded successfully
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Click the X button to remove
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={removeImage}
+                            className="h-8 w-8 p-0"
+                          >
+                            <XIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center w-full">
+                          <label
+                            htmlFor="image-upload"
+                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed bg-muted rounded-lg cursor-pointer border-border transition-colors"
+                          >
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="w-8 h-8 mb-2 " />
+                              <p className="mb-2 text-sm ">
+                                <span className="font-semibold">
+                                  Click to upload
+                                </span>{" "}
+                                or drag and drop
+                              </p>
+                              <p className="text-xs ">
+                                PNG, JPG, JPEG up to 5MB
+                              </p>
+                            </div>
+                            <input
+                              id="image-upload"
+                              type="file"
+                              className="hidden"
+                              accept="image/jpeg,image/jpg,image/png"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                handleImageChange(file);
+                              }}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Upload an image for your character (optional, max 5MB)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
