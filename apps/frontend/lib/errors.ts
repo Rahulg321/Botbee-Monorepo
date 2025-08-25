@@ -12,7 +12,7 @@ export type Surface =
   | "api"
   | "stream"
   | "database"
-  | "history"
+  
   | "vote"
   | "document"
   | "suggestions";

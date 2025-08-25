@@ -8,5 +8,8 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.12.0"
   }
 }
