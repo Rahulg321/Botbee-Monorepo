@@ -73,7 +73,6 @@ const ErrorPage = async ({
             <AlertTriangle className="w-8 h-8 text-accent-foreground" />
           </div>
 
-          {/* Content */}
           <div className="space-y-3">
             <h1 className="text-2xl font-bold text-foreground">
               Something went wrong
@@ -84,7 +83,6 @@ const ErrorPage = async ({
             </p>
           </div>
 
-          {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button asChild variant="outline" className="flex-1">
               <Link href="/" className="flex items-center justify-center gap-2">

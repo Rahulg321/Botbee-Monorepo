@@ -125,6 +125,15 @@ function BotCard({ bot }: { bot: Bot }) {
               Edit Bot
             </Link>
           </Button>
+          <Button asChild className="w-full">
+            <Link
+              href={`/created-bots/${bot.id}/embed`}
+              className="flex items-center gap-2"
+            >
+              <Edit3 className="size-4" />
+              Embed Bot
+            </Link>
+          </Button>
         </div>
       </CardFooter>
     </Card>

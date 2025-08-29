@@ -752,3 +752,15 @@ export async function getAiCharacterById(characterId: string) {
     return null;
   }
 }
+
+export async function getBotChatHistoryByUserId(userId: string) {
+  try {
+    return await db.select().from(botChats).where(eq(botChats.userId, userId));
+  } catch (error) {
+    console.log(
+      "An error occured trying to get bot chat history by user id",
+      error
+    );
+    return null;
+  }
+}

@@ -3,10 +3,14 @@ import { db } from "@repo/db";
 import { user } from "@repo/db/schema";
 import { auth } from "@/auth";
 import { ModeToggle } from "@/components/mode-toggle";
+import { redirect } from "next/navigation";
 
 const page = async () => {
   const userSession = await auth();
-  console.log(userSession);
+
+  if (!userSession) {
+    redirect("/login");
+  }
 
   return (
     <div>
